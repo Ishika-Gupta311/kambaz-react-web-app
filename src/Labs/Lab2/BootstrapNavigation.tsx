@@ -28,7 +28,7 @@ export default function BootStrapNavigation() {
       <Card.Text>
         All time favourite show!
       </Card.Text>
-      <Button variant="primary">FRIENDS</Button>
+      <Button variant="primary">Boldly Go</Button>
     </Card.Body>
   </Card>
 </div>
