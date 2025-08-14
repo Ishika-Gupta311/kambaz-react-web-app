@@ -13,7 +13,7 @@ export default function Labs() {
 
     <div>
       <h1>Labs</h1>
-      <p id="wd-fullname">Samarth Goel, NUID- 002034159</p>
+      <p id="wd-fullname">Ishika Gupta, NUID- 002301071</p>
 
       <TOC />
       <Routes>

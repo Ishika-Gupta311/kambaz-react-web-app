@@ -8,7 +8,7 @@ export default function SimpleArrays() {
                          numberArray1, stringArray1 ];
   return (
     <div id="wd-simple-arrays">
-      <h4>Simple Arrays</h4>
+      <h4>Working with Arrays</h4>
       numberArray1 = {numberArray1}     <br />
       stringArray1 = {stringArray1}     <br />
       variableArray1 = {variableArray1} <br />

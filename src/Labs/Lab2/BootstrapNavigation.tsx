@@ -22,11 +22,11 @@ export default function BootStrapNavigation() {
     Cards
   </h2>
   <Card style={{ width: "18rem" }}>
-    <Card.Img variant="top" src="images/stacked.jpeg" />
+    <Card.Img variant="top" src="images/download.jpeg" />
     <Card.Body>
-      <Card.Title>The Weeknd</Card.Title>
+      <Card.Title>Friends</Card.Title>
       <Card.Text>
-        One of the greatest songs ever made!
+        All time favourite show!
       </Card.Text>
       <Button variant="primary">Boldly Go</Button>
     </Card.Body>
