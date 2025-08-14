@@ -7,11 +7,13 @@ import type { RootState, AppDispatch } from "../../store";
 import {
   fetchAssignments,
   createAssignment,
-  updateAssignmentById,
   deleteAssignmentById,
   setEditing,
   type Assignment,
+  updateAssignmentById,
 } from "./reducer";
+
+import AssignmentEditor from "./Editor";
 
 import {
   InputGroup,
@@ -19,20 +21,24 @@ import {
   Button,
   ListGroup,
   Modal,
-  Form,
 } from "react-bootstrap";
 import { FaSearch, FaPlus, FaRegFileAlt } from "react-icons/fa";
 import { BsGripVertical, BsTrash, BsGear } from "react-icons/bs";
 import { IoEllipsisVertical } from "react-icons/io5";
 import GreenCheckmark from "../Modules/GreenCheckmark";
 
-export default function Assignments({ isFaculty }: { isFaculty: boolean }) {
-  const { cid } = useParams<{ cid: string }>();
+interface AssignmentsProps {
+  isFaculty: boolean;
+}
+
+export default function Assignments({ isFaculty }: AssignmentsProps) {
+  const { cid, aid } = useParams<{ cid: string; aid?: string }>();
   const dispatch = useDispatch<AppDispatch>();
   const assignments = useSelector(
     (s: RootState) => s.assignmentsReducer.assignments
   );
   const status = useSelector((s: RootState) => s.assignmentsReducer.status);
+
   const [showAdd, setShowAdd] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newDesc, setNewDesc] = useState("");
@@ -40,9 +46,13 @@ export default function Assignments({ isFaculty }: { isFaculty: boolean }) {
   const [newFrom, setNewFrom] = useState("");
   const [newDueDate, setNewDueDate] = useState("");
   const [newUntil, setNewUntil] = useState("");
+
   useEffect(() => {
     if (cid) dispatch(fetchAssignments(cid));
   }, [cid, dispatch]);
+  if (aid && aid !== "New") {
+    return <AssignmentEditor />;
+  }
 
   if (status === "loading") {
     return <div>Loading assignments…</div>;
@@ -63,16 +73,20 @@ export default function Assignments({ isFaculty }: { isFaculty: boolean }) {
   };
 
   const handleAddAssignment = () => {
-    if (!newTitle.trim()) return;
-    const payload = {
-      title: newTitle.trim(),
-      descriptionHtml: `<p>${newDesc}</p>`,
-      points: newPoints,
-      availableFrom: newFrom,
-      dueDate: newDueDate,
-      availableUntil: newUntil,
-    };
-    dispatch(createAssignment({ cid: cid!, assn: payload }));
+    if (!newTitle.trim() || !cid) return;
+    dispatch(
+      createAssignment({
+        cid,
+        assn: {
+          title: newTitle.trim(),
+          descriptionHtml: `<p>${newDesc}</p>`,
+          points: newPoints,
+          availableFrom: newFrom,
+          dueDate: newDueDate,
+          availableUntil: newUntil,
+        },
+      })
+    );
     setShowAdd(false);
     setNewTitle("");
     setNewDesc("");
@@ -83,7 +97,7 @@ export default function Assignments({ isFaculty }: { isFaculty: boolean }) {
   };
 
   return (
-    <div className="p-3">
+    <>
       <div className="d-flex align-items-center mb-4">
         <InputGroup style={{ maxWidth: 300 }} className="me-auto">
           <InputGroup.Text>
@@ -92,23 +106,26 @@ export default function Assignments({ isFaculty }: { isFaculty: boolean }) {
           <FormControl placeholder="Search…" />
         </InputGroup>
         {isFaculty && (
-
-
-           <><Button
-            id="wd-add-group-click"
-            variant="light"
-            size="lg"
-            className="me-2 border border-secondary text-dark"
-          >
-            <FaPlus className="me-1" /> Group
-          </Button><Button
-            id="wd-add-assignment-click"
-            variant="danger"
-            size="lg"
-            onClick={() => setShowAdd(true)}
-          >
-              <FaPlus className="me-1" /> Assignment
-            </Button></>
+          <>
+            <Button
+              id="wd-add-group-click"
+              variant="light"
+              size="lg"
+              className="me-2 border border-secondary text-dark"
+            >
+              <FaPlus className="me-1" />
+              Group
+            </Button>
+            <Button
+              id="wd-add-assignment-click"
+              variant="danger"
+              size="lg"
+              onClick={() => setShowAdd(true)}
+            >
+              <FaPlus className="me-1" />
+              Assignment
+            </Button>
+          </>
         )}
       </div>
 
@@ -132,7 +149,9 @@ export default function Assignments({ isFaculty }: { isFaculty: boolean }) {
                 <FormControl
                   value={a.title}
                   onChange={(e) =>
-                    dispatch(updateAssignmentById({ ...a, title: e.target.value }))
+                    dispatch(
+                      updateAssignmentById({ ...a, title: e.target.value })
+                    )
                   }
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -147,10 +166,12 @@ export default function Assignments({ isFaculty }: { isFaculty: boolean }) {
                     <BsGripVertical className="me-2" />
                     <FaRegFileAlt className="me-2 text-success" />
                     <Link
-                      to={`/Kambaz/Courses/${cid}/Assignments/${a._id}`}
+                      to={`${a._id}`}
                       className="text-decoration-none text-dark"
                     >
-                      <strong style={{ fontSize: "1.1rem" }}>{a.title}</strong>
+                      <strong style={{ fontSize: "1.1rem" }}>
+                        {a.title}
+                      </strong>
                     </Link>
                   </div>
                   <div
@@ -189,78 +210,63 @@ export default function Assignments({ isFaculty }: { isFaculty: boolean }) {
         ))}
       </ListGroup>
 
-      {/* Add Assignment Modal */}
       <Modal show={showAdd} onHide={() => setShowAdd(false)}>
         <Modal.Header closeButton>
           <Modal.Title>New Assignment</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form>
-            <Form.Group className="mb-3">
-              <Form.Label>Title</Form.Label>
-              <FormControl
-                placeholder="Assignment title"
-                value={newTitle}
-                onChange={(e) => setNewTitle(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
-              <FormControl
-                as="textarea"
-                rows={3}
-                placeholder="Describe assignment…"
-                value={newDesc}
-                onChange={(e) => setNewDesc(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Points</Form.Label>
-              <FormControl
-                type="number"
-                value={newPoints}
-                onChange={(e) => setNewPoints(+e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Available From</Form.Label>
-              <FormControl
-                type="datetime-local"
-                value={newFrom}
-                onChange={(e) => setNewFrom(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Due Date</Form.Label>
-              <FormControl
-                type="datetime-local"
-                value={newDueDate}
-                onChange={(e) => setNewDueDate(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Available Until</Form.Label>
-              <FormControl
-                type="datetime-local"
-                value={newUntil}
-                onChange={(e) => setNewUntil(e.target.value)}
-              />
-            </Form.Group>
-          </Form>
+          <FormControl
+            placeholder="Title"
+            value={newTitle}
+            onChange={(e) => setNewTitle(e.target.value)}
+            className="mb-2"
+          />
+          <FormControl
+            as="textarea"
+            rows={3}
+            placeholder="Description…"
+            value={newDesc}
+            onChange={(e) => setNewDesc(e.target.value)}
+            className="mb-2"
+          />
+          <FormControl
+            type="number"
+            placeholder="Points"
+            value={newPoints}
+            onChange={(e) => setNewPoints(+e.target.value)}
+            className="mb-2"
+          />
+          <FormControl
+            type="datetime-local"
+            placeholder="Available From"
+            value={newFrom}
+            onChange={(e) => setNewFrom(e.target.value)}
+            className="mb-2"
+          />
+          <FormControl
+            type="datetime-local"
+            placeholder="Due Date"
+            value={newDueDate}
+            onChange={(e) => setNewDueDate(e.target.value)}
+            className="mb-2"
+          />
+          <FormControl
+            type="datetime-local"
+            placeholder="Available Until"
+            value={newUntil}
+            onChange={(e) => setNewUntil(e.target.value)}
+            className="mb-2"
+          />
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowAdd(false)}>
             Cancel
           </Button>
-          <Button
-            id="wd-save-assignment-click"
-            variant="primary"
-            onClick={handleAddAssignment}
-          >
+          <Button id="wd-save-assignment-click" onClick={handleAddAssignment}>
             Save
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </>
   );
 }
